@@ -1,3 +1,4 @@
+import axios from 'axios';
 import Head from 'next/head'
 
 export default function Home() {
@@ -25,12 +26,34 @@ export default function Home() {
 
         mediaRecorder.start()
 
-        mediaRecorder.onstop = (e) => {
+        mediaRecorder.onstop = async (e) => {
+          const file = new Blob(data, {
+            type: 'video/mp4'
+          })
+
           document.getElementById("videoView").src = URL.createObjectURL(
-            new Blob(data, {
-              type: data[0].type
-            })
+            // new Blob(data, {
+            //   type: data[0].type
+            // })
+            file
           )
+
+          const fileName = Date.now().toString() + "vid.mp4"
+
+          const formData = new FormData()
+          formData.append("file", file, fileName)
+
+          const endpoint = '/api/upload'
+
+          const options = {
+          headers: {
+              'Content-Type': 'multipart/form-data',
+          },
+          }
+
+          const response = await axios.post(endpoint, formData, options)
+
+          alert(response.data.message)
         }
       
       } catch (error) {
@@ -69,7 +92,24 @@ export default function Home() {
         <div>
           <button onClick={() => startCapture()}>Start</button>
           <button onClick={() => stopCapture()}>stop</button>
-          <video id='videoView' className="h-52 w-full" autoPlay/>
+          <video 
+          id='videoView' 
+          className="h-52 w-full" 
+          autoPlay
+          style={{
+            'width': '500px'
+          }}/>
+
+          <video 
+          // add src here to check if file valid!
+          // src='/uploads/1671529307895vid.mp4'
+          id='videoView2' 
+          autoPlay
+          loop
+          controls
+          style={{
+            'width': '500px'
+          }}/>
         </div>
         </div>
       </main>
