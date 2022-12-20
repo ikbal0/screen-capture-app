@@ -8,10 +8,31 @@ export default function Home() {
   };
   
   async function startCapture() {
+
     if (document.getElementById("videoView").srcObject == null){
       try {
+
+        const data = []
+
         const myElement = document.getElementById("videoView");
-        myElement.srcObject = await navigator.mediaDevices.getDisplayMedia(displayMediaOptions)
+        const stream = myElement.srcObject = await navigator.mediaDevices.getDisplayMedia(displayMediaOptions)
+      
+        const mediaRecorder = new MediaRecorder(stream)
+
+        mediaRecorder.ondataavailable = (e) => {
+          data.push(e.data)
+        }
+
+        mediaRecorder.start()
+
+        mediaRecorder.onstop = (e) => {
+          document.getElementById("videoView").src = URL.createObjectURL(
+            new Blob(data, {
+              type: data[0].type
+            })
+          )
+        }
+      
       } catch (error) {
         console.error(`Error: ${error}`)
       }
@@ -19,6 +40,7 @@ export default function Home() {
       alert('no')
     }
   }
+
 
   function stopCapture(evt) {
     try {
