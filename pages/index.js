@@ -9,22 +9,31 @@ export default function Home() {
   };
   
   async function startCapture() {
+    if (document.getElementById("videoView").srcObject != null) return alert('already recorded')
+    if (document.getElementById("videoView2").srcObject != null) return alert('0')
+    try {
+      const dataCam = []
+      const data = []
 
-    if (document.getElementById("videoView").srcObject == null){
+      const myElement = document.getElementById("videoView");
+      const myElement2 = document.getElementById("videoView2");
       try {
-
-        const data = []
-
-        const myElement = document.getElementById("videoView");
         const stream = myElement.srcObject = await navigator.mediaDevices.getDisplayMedia(displayMediaOptions)
-      
+        const stream2 = myElement2.srcObject = await navigator.mediaDevices.getUserMedia(displayMediaOptions)
+        
         const mediaRecorder = new MediaRecorder(stream)
+        const mediaRecorder2 = new MediaRecorder(stream2)
 
         mediaRecorder.ondataavailable = (e) => {
           data.push(e.data)
         }
 
+        mediaRecorder2.ondataavailable = (e) => {
+          dataCam.push(e.data)
+        }
+
         mediaRecorder.start()
+        mediaRecorder2.start()
 
         mediaRecorder.onstop = async (e) => {
           const file = new Blob(data, {
@@ -32,9 +41,6 @@ export default function Home() {
           })
 
           document.getElementById("videoView").src = URL.createObjectURL(
-            // new Blob(data, {
-            //   type: data[0].type
-            // })
             file
           )
 
@@ -53,24 +59,54 @@ export default function Home() {
 
           const response = await axios.post(endpoint, formData, options)
 
-          alert(response.data.message)
+          alert(`screen upload ${response.data.message}`)
         }
+
+        mediaRecorder2.onstop = async (e) => {
+          const file = new Blob(dataCam, {
+            type: 'video/mp4'
+          })
+
+          document.getElementById("videoView2").src = URL.createObjectURL(
+            file
+          )
+
+          const fileName = Date.now().toString() + "camVid.mp4"
+
+          const formData = new FormData()
+          formData.append("file", file, fileName)
+
+          const endpoint = '/api/upload'
+
+          const options = {
+          headers: {
+              'Content-Type': 'multipart/form-data',
+          },
+          }
+
+          const response = await axios.post(endpoint, formData, options)
+
+          alert(`cam upload ${response.data.message}`)
+        }
+      } catch (error) {
+        console.error(error)
+        alert('no')
+      }
       
       } catch (error) {
         console.error(`Error: ${error}`)
       }
-    } else {
-      alert('no')
-    }
   }
-
 
   function stopCapture(evt) {
     try {
       let tracks = document.getElementById("videoView").srcObject.getTracks();
+      let tracks2 = document.getElementById("videoView2").srcObject.getTracks();
     
       tracks.forEach((track) => track.stop());
+      tracks2.forEach((track) => track.stop());
       document.getElementById("videoView").srcObject = null;
+      document.getElementById("videoView2").srcObject = null;
     } catch (error) {
       alert('no')
     }
@@ -97,7 +133,8 @@ export default function Home() {
           className="h-52 w-full" 
           autoPlay
           style={{
-            'width': '500px'
+            'width': '500px',
+            'display': 'none'
           }}/>
 
           <video 
@@ -108,7 +145,8 @@ export default function Home() {
           loop
           controls
           style={{
-            'width': '500px'
+            'width': '500px',
+            'display': 'none'
           }}/>
         </div>
         </div>
